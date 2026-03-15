@@ -19,13 +19,16 @@ overflow-x:hidden;
 
 #bgVideo{
 position:fixed;
-right:0;
-bottom:0;
-min-width:100%;
-min-height:100%;
+top:0;
+left:0;
+width:100%;
+height:100%;
 object-fit:cover;
-z-index:-2;
+z-index:-10;
+pointer-events:none;
 }
+
+/* затемнение */
 
 #videoOverlay{
 position:fixed;
@@ -34,7 +37,7 @@ left:0;
 width:100%;
 height:100%;
 background:rgba(10,0,20,0.6);
-z-index:-1;
+z-index:-5;
 }
 
 /* HEADER */
@@ -138,7 +141,7 @@ animation:music 1s infinite ease-in-out;
 
 <!-- VIDEO BACKGROUND -->
 
-<video autoplay muted loop id="bgVideo">
+<video autoplay muted loop playsinline id="bgVideo">
 <source src="video.mp4" type="video/mp4">
 </video>
 
