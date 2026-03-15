@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>MySpotify</title>
+<title>MySpotify SoundCloud</title>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
 <style>
 body{
@@ -21,7 +21,7 @@ header{
 }
 .track-list{
     display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+    grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
     gap:20px;
     padding:20px;
 }
@@ -32,45 +32,51 @@ header{
     transition: transform 0.2s;
 }
 .track:hover{
-    transform: scale(1.05);
-}
-.track img{
-    width:100%;
-    border-radius:10px;
+    transform: scale(1.03);
 }
 .track h3{
-    margin:10px 0 5px 0;
+    margin:10px 0;
 }
-audio{
-    width:100%;
-    margin-top:10px;
+iframe{
+    border-radius:10px;
 }
 </style>
 </head>
 <body>
 
-<header>🎧 MySpotify</header>
+<header>🎧 MySpotify SoundCloud</header>
 
 <div class="track-list" id="track-list"></div>
 
 <script>
-const tracks=[
-  {title:"Track One", cover:"https://picsum.photos/300?random=1", url:"https://soundcloud.com/morgenshternfamilyoneluv/morgenshtern-e-bannaya?si=0cf278579bc3442f9e603d943617dcd7&utm_source=clipboard&utm_medium=text&utm_campaign=social_sharing"},
-  {title:"Track Two", cover:"https://picsum.photos/300?random=2", url:"https://soundcloud.com/morgenshternfamilyoneluv/morgenshtern-e-bannaya?si=0cf278579bc3442f9e603d943617dcd7&utm_source=clipboard&utm_medium=text&utm_campaign=social_sharing"},
-  {title:"Track Three", cover:"https://picsum.photos/300?random=3", url:"https://soundcloud.com/morgenshternfamilyoneluv/morgenshtern-e-bannaya?si=0cf278579bc3442f9e603d943617dcd7&utm_source=clipboard&utm_medium=text&utm_campaign=social_sharing"}
+// Сюда вставляешь свои SoundCloud ссылки
+const tracks = [
+  {
+    title: "E-Bannaya",
+    url: "https://soundcloud.com/morgenshternfamilyoneluv/morgenshtern-e-bannaya"
+  },
+  {
+    title: "Track Two Example",
+    url: "https://soundcloud.com/anotherartist/song2"
+  },
+  {
+    title: "Track Three Example",
+    url: "https://soundcloud.com/anotherartist/song3"
+  }
 ];
 
-const container=document.getElementById("track-list");
+const container = document.getElementById("track-list");
 
-tracks.forEach(track=>{
-    const div=document.createElement("div");
-    div.className="track";
-    div.innerHTML=`
-        <img src="${track.cover}" alt="${track.title}">
-        <h3>${track.title}</h3>
-        <audio controls src="${track.url}"></audio>
-    `;
-    container.appendChild(div);
+tracks.forEach(track => {
+  const div = document.createElement("div");
+  div.className = "track";
+  div.innerHTML = `
+    <h3>${track.title}</h3>
+    <iframe width="100%" height="166" scrolling="no" frameborder="no" allow="autoplay"
+      src="https://w.soundcloud.com/player/?url=${encodeURIComponent(track.url)}&color=%231DB954&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false">
+    </iframe>
+  `;
+  container.appendChild(div);
 });
 </script>
 
