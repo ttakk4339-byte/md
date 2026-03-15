@@ -40,6 +40,10 @@ header{
 iframe{
     border-radius:10px;
 }
+.volume-control{
+    width:100%;
+    margin-top:10px;
+}
 </style>
 </head>
 <body>
@@ -48,8 +52,10 @@ iframe{
 
 <div class="track-list" id="track-list"></div>
 
+<script src="https://w.soundcloud.com/player/api.js"></script>
+
 <script>
-// Сюда вставляешь свои SoundCloud ссылки
+// Массив треков SoundCloud
 const tracks = [
   {
     title: "E-Bannaya",
@@ -58,10 +64,6 @@ const tracks = [
   {
     title: "Track Two Example",
     url: "https://soundcloud.com/anotherartist/song2"
-  },
-  {
-    title: "Track Three Example",
-    url: "https://soundcloud.com/anotherartist/song3"
   }
 ];
 
@@ -70,13 +72,28 @@ const container = document.getElementById("track-list");
 tracks.forEach(track => {
   const div = document.createElement("div");
   div.className = "track";
+  
   div.innerHTML = `
     <h3>${track.title}</h3>
-    <iframe width="100%" height="166" scrolling="no" frameborder="no" allow="autoplay"
-      src="https://w.soundcloud.com/player/?url=${encodeURIComponent(track.url)}&color=%231DB954&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false">
-    </iframe>
+    <iframe width="100%" height="166" scrolling="no" frameborder="no" allow="autoplay"></iframe>
+    <input type="range" min="0" max="100" value="100" class="volume-control">
   `;
+  
   container.appendChild(div);
+  
+  const iframe = div.querySelector('iframe');
+  const slider = div.querySelector('.volume-control');
+  
+  // Вставляем src SoundCloud
+  iframe.src = `https://w.soundcloud.com/player/?url=${encodeURIComponent(track.url)}&color=%231DB954&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false`;
+  
+  // Инициализируем плеер
+  const widget = SC.Widget(iframe);
+  
+  // Слушаем слайдер и меняем громкость
+  slider.addEventListener('input', () => {
+    widget.setVolume(parseInt(slider.value));
+  });
 });
 </script>
 
