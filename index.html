@@ -2,34 +2,75 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>My Tracks</title>
+<title>MySpotify</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
 <style>
-body{ background:#111; color:white; font-family:Arial; text-align:center; }
-h1{ color:#ff5500; }
-.track{ background:#222; margin:20px auto; padding:15px; width:400px; border-radius:10px; }
-audio{ width:100%; }
+body{
+    margin:0;
+    font-family:'Montserrat', sans-serif;
+    background:#121212;
+    color:white;
+}
+header{
+    padding:20px;
+    text-align:center;
+    background:#1DB954;
+    font-size:28px;
+    font-weight:700;
+    letter-spacing:2px;
+}
+.track-list{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+    gap:20px;
+    padding:20px;
+}
+.track{
+    background:#181818;
+    border-radius:15px;
+    padding:15px;
+    transition: transform 0.2s;
+}
+.track:hover{
+    transform: scale(1.05);
+}
+.track img{
+    width:100%;
+    border-radius:10px;
+}
+.track h3{
+    margin:10px 0 5px 0;
+}
+audio{
+    width:100%;
+    margin-top:10px;
+}
 </style>
 </head>
 <body>
 
-<h1>🎵 My Tracks</h1>
+<header>🎧 MySpotify</header>
 
-<div id="tracks"></div>
+<div class="track-list" id="track-list"></div>
 
 <script>
-const trackList=[
-  {title:"Track 1", url:"https://example.com/song1.mp3"},
-  {title:"Track 2", url:"https://example.com/song2.mp3"},
-  // добавляй сюда свои mp3 ссылки
+const tracks=[
+  {title:"Track One", cover:"https://picsum.photos/300?random=1", url:"https://soundcloud.com/morgenshternfamilyoneluv/morgenshtern-e-bannaya?si=0cf278579bc3442f9e603d943617dcd7&utm_source=clipboard&utm_medium=text&utm_campaign=social_sharing"},
+  {title:"Track Two", cover:"https://picsum.photos/300?random=2", url:"https://soundcloud.com/morgenshternfamilyoneluv/morgenshtern-e-bannaya?si=0cf278579bc3442f9e603d943617dcd7&utm_source=clipboard&utm_medium=text&utm_campaign=social_sharing"},
+  {title:"Track Three", cover:"https://picsum.photos/300?random=3", url:"https://soundcloud.com/morgenshternfamilyoneluv/morgenshtern-e-bannaya?si=0cf278579bc3442f9e603d943617dcd7&utm_source=clipboard&utm_medium=text&utm_campaign=social_sharing"}
 ];
 
-const container=document.getElementById("tracks");
+const container=document.getElementById("track-list");
 
-trackList.forEach(track=>{
-  const div=document.createElement("div");
-  div.className="track";
-  div.innerHTML=`<h3>${track.title}</h3><audio controls src="${track.url}"></audio>`;
-  container.appendChild(div);
+tracks.forEach(track=>{
+    const div=document.createElement("div");
+    div.className="track";
+    div.innerHTML=`
+        <img src="${track.cover}" alt="${track.title}">
+        <h3>${track.title}</h3>
+        <audio controls src="${track.url}"></audio>
+    `;
+    container.appendChild(div);
 });
 </script>
 
