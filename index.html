@@ -2,13 +2,21 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Mini 3D Walking</title>
+<title>Mini 3D Open World</title>
 <style>
-body{margin:0; overflow:hidden;}
+body{margin:0; overflow:hidden; background:#87CEEB;}
 canvas{display:block;}
+#info{
+position:absolute; top:10px; left:10px; color:white; font-family:Arial;
+background:rgba(0,0,0,0.5); padding:10px;
+}
 </style>
 </head>
 <body>
+<div id="info">
+WASD - ходьба | Пробел - прыжок<br>
+ЛКМ - ломать блок | ПКМ - ставить блок
+</div>
 <script src="https://cdn.jsdelivr.net/npm/three@0.156.0/build/three.min.js"></script>
 <script>
 const scene = new THREE.Scene();
@@ -21,51 +29,103 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
 const light = new THREE.DirectionalLight(0xffffff,1);
-light.position.set(10,20,10);
+light.position.set(20,40,20);
 scene.add(light);
 
-// мир из блоков (земля)
+// размеры блоков
 const blockSize = 1;
-const world = [];
-for(let x=-5;x<=5;x++){
-  for(let z=-5;z<=5;z++){
-    const geometry = new THREE.BoxGeometry(blockSize, blockSize, blockSize);
-    const material = new THREE.MeshLambertMaterial({color:0x00FF00});
-    const cube = new THREE.Mesh(geometry, material);
-    cube.position.set(x,0,z);
-    scene.add(cube);
-    world.push(cube);
-  }
-}
 
-// игрок (красный куб)
+// игрок
 const playerGeo = new THREE.BoxGeometry(0.5,1,0.5);
 const playerMat = new THREE.MeshLambertMaterial({color:0xFF0000});
 const player = new THREE.Mesh(playerGeo,playerMat);
 player.position.set(0,1,0);
 scene.add(player);
 
-// физика игрока
 let velocityY = 0;
-const gravity = 0.02;
+const gravity = 0.03;
 let grounded = false;
 
-// управление WASD
+// управление
 const keys = {w:false,s:false,a:false,d:false};
 document.addEventListener('keydown',e=>{
-  if(e.key=='w') keys.w=true;
-  if(e.key=='s') keys.s=true;
-  if(e.key=='a') keys.a=true;
-  if(e.key=='d') keys.d=true;
-  if(e.key==' ' && grounded) {velocityY=0.35; grounded=false;} // прыжок
+if(e.key=='w') keys.w=true;
+if(e.key=='s') keys.s=true;
+if(e.key=='a') keys.a=true;
+if(e.key=='d') keys.d=true;
+if(e.key==' ' && grounded){velocityY=0.35; grounded=false;}
 });
 document.addEventListener('keyup',e=>{
-  if(e.key=='w') keys.w=false;
-  if(e.key=='s') keys.s=false;
-  if(e.key=='a') keys.a=false;
-  if(e.key=='d') keys.d=false;
+if(e.key=='w') keys.w=false;
+if(e.key=='s') keys.s=false;
+if(e.key=='a') keys.a=false;
+if(e.key=='d') keys.d=false;
 });
 
+// блоки и типы
+let world = [];
+const types = {
+  1:0x654321, // земля
+  2:0x00FF00, // трава
+  3:0x888888, // камень
+  4:0x228B22  // дерево
+};
+
+// загрузка сохранения
+if(localStorage.getItem("openWorld")){
+  const saved = JSON.parse(localStorage.getItem("openWorld"));
+  saved.forEach(b=>createBlock(b.x,b.y,b.z,b.type));
+}
+
+// генерация блока
+function createBlock(x,y,z,type){
+  const geo = new THREE.BoxGeometry(blockSize,blockSize,blockSize);
+  const mat = new THREE.MeshLambertMaterial({color:types[type]});
+  const cube = new THREE.Mesh(geo,mat);
+  cube.position.set(x+0.5,y+0.5,z+0.5);
+  cube.userData = {type};
+  scene.add(cube);
+  world.push(cube);
+}
+
+// простая генерация вокруг игрока
+function generateAround(px,pz,r=10){
+  for(let x=Math.floor(px-r);x<=Math.floor(px+r);x++){
+    for(let z=Math.floor(pz-r);z<=Math.floor(pz+r);z++){
+      if(!world.some(b=>Math.floor(b.position.x)==x && Math.floor(b.position.z)==z)){
+        let h = 0;
+        createBlock(x,h,z,1);
+        createBlock(x,h+1,z,2);
+        if(Math.random()<0.05) createBlock(x,h+2,z,3);
+      }
+    }
+  }
+}
+generateAround(player.position.x,player.position.z);
+
+// ломание/установка блоков
+document.addEventListener('mousedown',e=>{
+  const ray = new THREE.Raycaster();
+  ray.setFromCamera(new THREE.Vector2(0,0),camera);
+  const intersects = ray.intersectObjects(world);
+  if(intersects.length>0){
+    const obj = intersects[0].object;
+    if(e.button==0){ // ЛКМ ломаем
+      scene.remove(obj);
+      world = world.filter(o=>o!==obj);
+    }else if(e.button==2){ // ПКМ ставим траву
+      const p = intersects[0].point;
+      const nx = Math.floor(p.x), ny=Math.floor(p.y+0.5), nz=Math.floor(p.z);
+      createBlock(nx,ny,nz,2);
+    }
+    // сохранение
+    const data = world.map(o=>({x:Math.floor(o.position.x),y:Math.floor(o.position.y),z:Math.floor(o.position.z),type:o.userData.type}));
+    localStorage.setItem("openWorld",JSON.stringify(data));
+  }
+});
+document.addEventListener('contextmenu',e=>e.preventDefault());
+
+// анимация
 function animate(){
   requestAnimationFrame(animate);
 
@@ -81,19 +141,23 @@ function animate(){
   player.position.y += velocityY;
 
   // столкновение с землёй
-  if(player.position.y < 1){ // куб земли y=0, игрок 1 высота
+  let groundY = Math.floor(player.position.y-0.5);
+  if(player.position.y<1){
     player.position.y = 1;
     velocityY=0;
     grounded=true;
   }
 
-  // камера следит за игроком
+  // генерация блоков вокруг
+  generateAround(player.position.x,player.position.z);
+
+  // камера
   camera.position.x = player.position.x;
   camera.position.z = player.position.z + 5;
   camera.position.y = player.position.y + 3;
   camera.lookAt(player.position);
 
-  renderer.render(scene, camera);
+  renderer.render(scene,camera);
 }
 
 animate();
