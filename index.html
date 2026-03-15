@@ -1,141 +1,37 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
-<title>Mini Minecraft FP</title>
+<title>My Tracks</title>
 <style>
-body {margin:0; overflow:hidden; background:#87CEEB;}
-canvas {display:block;}
-#info{
-position:absolute; top:10px; left:10px; color:white; background:rgba(0,0,0,0.5); padding:10px;
-}
+body{ background:#111; color:white; font-family:Arial; text-align:center; }
+h1{ color:#ff5500; }
+.track{ background:#222; margin:20px auto; padding:15px; width:400px; border-radius:10px; }
+audio{ width:100%; }
 </style>
 </head>
 <body>
-<div id="info">Click to start | WASD - move | Space - jump | LMB - break | RMB - place</div>
-<script src="https://cdn.jsdelivr.net/npm/three@0.156.0/build/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.156.0/examples/js/controls/PointerLockControls.js"></script>
+
+<h1>🎵 My Tracks</h1>
+
+<div id="tracks"></div>
+
 <script>
-// ==== SCENE ====
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x87CEEB);
+const trackList=[
+  {title:"Track 1", url:"https://example.com/song1.mp3"},
+  {title:"Track 2", url:"https://example.com/song2.mp3"},
+  // добавляй сюда свои mp3 ссылки
+];
 
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
-const renderer = new THREE.WebGLRenderer({antialias:true});
-renderer.setSize(window.innerWidth, window.innerHeight);
-document.body.appendChild(renderer.domElement);
+const container=document.getElementById("tracks");
 
-const light = new THREE.DirectionalLight(0xffffff, 1);
-light.position.set(30, 50, 30);
-scene.add(light);
-
-// ==== CONTROLS ====
-const controls = new THREE.PointerLockControls(camera, document.body);
-document.body.addEventListener('click', ()=> controls.lock());
-
-// ==== BLOCK TYPES ====
-const blockSize = 1;
-let world = [];
-const types = {1:0x654321, 2:0x00FF00, 3:0x888888, 4:0x228B22};
-let selectedBlockType = 2;
-
-// ==== PLAYER ====
-let player = {x:0, y:2, z:0, velocityY:0, grounded:false};
-const keys = {w:false,s:false,a:false,d:false};
-document.addEventListener('keydown', e=>{
-  if(e.key=='w') keys.w=true;
-  if(e.key=='s') keys.s=true;
-  if(e.key=='a') keys.a=true;
-  if(e.key=='d') keys.d=true;
-  if(e.key==' ' && player.grounded){player.velocityY=0.35; player.grounded=false;}
+trackList.forEach(track=>{
+  const div=document.createElement("div");
+  div.className="track";
+  div.innerHTML=`<h3>${track.title}</h3><audio controls src="${track.url}"></audio>`;
+  container.appendChild(div);
 });
-document.addEventListener('keyup', e=>{
-  if(e.key=='w') keys.w=false;
-  if(e.key=='s') keys.s=false;
-  if(e.key=='a') keys.a=false;
-  if(e.key=='d') keys.d=false;
-});
-
-// ==== WORLD FUNCTIONS ====
-function createBlock(x,y,z,type){
-  const geo = new THREE.BoxGeometry(blockSize, blockSize, blockSize);
-  const mat = new THREE.MeshLambertMaterial({color:types[type]});
-  const cube = new THREE.Mesh(geo, mat);
-  cube.position.set(x+0.5, y+0.5, z+0.5);
-  cube.userData = {type};
-  scene.add(cube);
-  world.push(cube);
-}
-
-// ==== GENERATE INITIAL WORLD ====
-for(let x=-10;x<=10;x++){
-  for(let z=-10; z<=10; z++){
-    createBlock(x,0,z,1); // земля
-    createBlock(x,1,z,2); // трава
-  }
-}
-
-// ==== COLLISIONS ====
-function checkCollision(px,py,pz){
-  player.grounded=false;
-  for(const b of world){
-    const bx=b.position.x-0.5, by=b.position.y-0.5, bz=b.position.z-0.5;
-    if(px+0.25>bx && px-0.25<bx+1 && pz+0.25>bz && pz-0.25<bz+1){
-      if(py-0.5<=by+1 && py-0.5>=by){
-        player.grounded=true;
-        return by+1+0.5;
-      }
-    }
-  }
-  return null;
-}
-
-// ==== MOUSE INTERACTIONS ====
-document.addEventListener('mousedown', e=>{
-  const ray = new THREE.Raycaster();
-  ray.setFromCamera(new THREE.Vector2(0,0), camera);
-  const intersects = ray.intersectObjects(world);
-  if(intersects.length>0){
-    const obj = intersects[0].object;
-    if(e.button==0){ // ЛКМ ломаем
-      scene.remove(obj);
-      world = world.filter(o=>o!==obj);
-    } else if(e.button==2){ // ПКМ ставим
-      const p = intersects[0].point;
-      const nx=Math.floor(p.x), ny=Math.floor(p.y+0.5), nz=Math.floor(p.z);
-      createBlock(nx, ny, nz, selectedBlockType);
-    }
-  }
-});
-document.addEventListener('contextmenu', e=>e.preventDefault());
-
-// ==== ANIMATE LOOP ====
-function animate(){
-  requestAnimationFrame(animate);
-
-  // движение игрока
-  let speed = 0.1;
-  if(keys.w) player.z -= speed;
-  if(keys.s) player.z += speed;
-  if(keys.a) player.x -= speed;
-  if(keys.d) player.x += speed;
-
-  // гравитация
-  player.velocityY -= 0.03;
-  player.y += player.velocityY;
-
-  // столкновения
-  const groundY = checkCollision(player.x, player.y, player.z);
-  if(groundY!==null){player.y = groundY; player.velocityY=0; player.grounded=true;}
-
-  // камера
-  camera.position.set(player.x, player.y+0.6, player.z);
-  camera.rotation.x = controls.getObject().rotation.x;
-  camera.rotation.y = controls.getObject().rotation.y;
-
-  renderer.render(scene, camera);
-}
-animate();
 </script>
+
 </body>
 </html>
